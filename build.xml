@@ -1,0 +1,112 @@
+<project name="AntJavaProject" default="main" basedir=".">
+	<description>
+		Create a Java Project (JAR) with Ant build script
+	</description>
+
+ 
+
+	<property name="projectName" value="DateUtils" />
+	
+	<!-- Java sources -->
+	<property name="src.dir" location="src" />
+	
+	<!-- Java classes -->
+	<property name="build.dir" location="bin" />
+	
+	<!-- Output, Jar -->
+	<property name="dist.dir" location="dist" />
+
+	    <property name="classes.dir" value="${build.dir}/classes"/>
+	<property name="jar.dir"     value="${build.dir}/jar"/>
+       <property name="lib.dir"     value="lib"/>
+
+        <path id="classpath">
+                <fileset dir="${lib.dir}">
+                  <include name="**/*.jar" />
+               </fileset>
+               
+           <!--<fileset dir="${lib.dir}" includes="**/*.jar"/> -->
+        </path>
+
+    <path id="application" location="${jar.dir}/${ant.project.name}.jar"/>
+
+<property name="main-class" value="com.app.core.utils.DateUtils" />
+
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp />
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build.dir}" />
+	</target>
+
+	<target name="compile" depends="init" description="compile the source ">
+
+		<mkdir dir="${classes.dir}"/>
+		<mkdir dir="${lib.dir}" />
+       	 	<javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath"/>
+       	 	
+       	 	<copy todir="${classes.dir}">
+            		<fileset dir="${src.dir}" excludes="**/*.java"/>
+       		</copy>
+       	 	
+		<!--		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}" /> Compile the java code from ${src.dir} into ${build.dir} -->
+
+	</target>
+
+	<target name="dist" depends="compile" description="package, output to JAR">
+
+		<!-- Create the distribution directory -->
+		<mkdir dir="${dist.dir}" />
+
+		<!-- Put everything in ${build} into the {$projectName}-${DSTAMP}.jar file -->
+		<jar jarfile="${dist.dir}/${projectName}-${DSTAMP}.jar" basedir="${build.dir}" >
+		    <manifest>
+			<!-- create an executable Jar -->
+			<attribute name="Main-Class" value="com.app.core.utils.DateUtils" />
+		    </manifest>
+		</jar>
+	</target>
+
+	<target name="clean" description="clean up">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+		<delete dir="${jar.dir}" />
+	</target>
+	
+	<target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+            </manifest>
+        </jar>
+    </target>
+	
+	
+	<target name="run" depends="jar">
+        <java fork="true" classname="${main-class}">
+            <classpath>
+                <path refid="classpath"/>
+                <path refid="application"/>
+
+                <path location="${jar.dir}/${ant.project.name}.jar"/>
+            </classpath>
+        </java>
+    </target>
+    <target name="junit" depends="jar">
+        <junit printsummary="yes">
+            <classpath>
+                <path refid="classpath"/>
+                <path refid="application"/>
+            </classpath>
+            
+            <batchtest fork="yes">
+                <fileset dir="${src.dir}" includes="*Test.java"/>
+            </batchtest>
+        </junit>
+    </target>
+	<!-- Default, run this -->
+	<target name="main" depends="clean, compile, dist" />
+	
+</project>
